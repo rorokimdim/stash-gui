@@ -1,0 +1,20 @@
+{
+  "name": "stash-gui",
+  "version": "0.0.1",
+  "private": true,
+  "main": "resources/main.js",
+  "scripts": {
+    "dev": "./node_modules/.bin/shadow-cljs watch main renderer",
+    "build": "./node_modules/.bin/shadow-cljs compile main renderer",
+    "clean": "rm -rf resources/public/js/* && rm -rf target"
+  },
+  "devDependencies": {
+    "electron": "^11.0.3",
+    "shadow-cljs": "2.11.8"
+  },
+  "dependencies": {
+    "create-react-class": "^15.7.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  }
+}
