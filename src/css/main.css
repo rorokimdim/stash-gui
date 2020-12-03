@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+details {
+  padding: .5em .5em 0;
+}
+
+details[open] {
+  padding: .5em;
+}
+
+details[open] summary {
+  padding-left: .5em;
+  margin-bottom: .5em;
+}
+
+details .selected {
+  background-color: #066CD3;
+  color: #FFFFFF;
+  outline: none;
+}
+
+details .list-group .list-group-item {
+  border-top: none;
+}
+
+details .list-group .list-group-item:hover:not(.selected) {
+  background-color: #DDDFE1;
+}
+
+.editor {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  outline: none;
+  overflow-y: scroll;
+  padding: 0.5em;
+}
+
+.search-input {
+  margin: 2px;
+  min-width: 130px;
+  max-width: 200px;
+}
+
+.no-open-file {
+  @apply flex flex-col justify-center items-center;
+  width: 100%;
+}
+
+.no-open-file button {
+  @apply self-center;
+  margin-bottom: 0.5em;
+  display: block;
+  width: 150px;
+}

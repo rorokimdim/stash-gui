@@ -1,19 +1,31 @@
 {
   "name": "stash-gui",
+  "productName": "Stash",
   "version": "0.0.1",
   "private": true,
   "main": "resources/main.js",
   "scripts": {
-    "dev": "./node_modules/.bin/shadow-cljs watch main renderer",
-    "build": "./node_modules/.bin/shadow-cljs compile main renderer",
-    "clean": "rm -rf resources/public/js/* && rm -rf target"
+    "build": "npx shadow-cljs compile main renderer",
+    "build-css": "postcss src/css/main.css -o resources/public/css/main.css",
+    "clean": "rm -rf resources/public/js/* && rm -rf target",
+    "copy-stash-binary": "mkdir -p resources/bin && cp bin/mac/stash resources/bin/",
+    "dev": "npm run copy-stash-binary && npx shadow-cljs watch main renderer",
+    "build-release": "npx shadow-cljs release main renderer && npm run build-css",
+    "start": "npx electron ."
   },
   "devDependencies": {
+    "cssnano": "^4.1.10",
     "electron": "^11.0.3",
-    "shadow-cljs": "2.11.8"
+    "onchange": "^7.1.0",
+    "postcss-cli": "^8.3.0",
+    "shadow-cljs": "2.11.8",
+    "tailwindcss": "^2.0.1"
   },
   "dependencies": {
+    "bencode": "^2.0.1",
+    "child_process": "^1.0.2",
     "create-react-class": "^15.7.0",
+    "electron-prompt": "^1.6.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   }

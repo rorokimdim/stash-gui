@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Not sure why I need to do this
+rm -rf .shadow-cljs
+
+rm -rf build
+mkdir -p build
+cp -r node_modules build/
+cp -r resources build/
+mkdir -p build/resources/bin/
+cp LICENSE build/
+cp README.md build/
+cp bin/mac/stash build/resources/bin/
+cp package.json build/
+npm run build-release
+npx electron-packager ./build Stash --platform=darwin --arch=x64 --icon=./resources/public/img/icon.icns --overwrite

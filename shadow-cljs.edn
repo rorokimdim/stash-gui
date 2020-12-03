@@ -1,15 +1,23 @@
 ;; shadow-cljs configuration
 {:source-paths ["src"]
 
- :dependencies [[reagent "1.0.0-rc1"]]
+ :dependencies [[reagent "1.0.0"]
+                [re-frame "1.1.2"]
+                [prismatic/dommy "1.1.0"]
+                [cider/cider-nrepl "0.25.5"]]
 
+ :nrepl {:port 3333}
  :dev-http {8080 "resources/public/"}
 
  :builds {:main {:target :node-script
+                 :compiler-options {:shadow-keywords true}
                  :output-to "resources/main.js"
-                 :main app.main.core/main}
+                 :main app.main.core/main
+                 }
 
           :renderer {:target :browser
+                     :compiler-options {:shadow-keywords true}
+                     :js-options {:js-provider :require}
                      :output-dir "resources/public/js"
                      :asset-path "js"
                      :modules {:renderer {:init-fn app.renderer.core/start!}}}}}

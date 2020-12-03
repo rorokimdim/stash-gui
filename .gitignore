@@ -4,4 +4,8 @@ node_modules/
 
 resources/public/js
 resources/main.js
+resources/bin/*
 target/
+Stash-darwin-x64
+Stash-linux-x64
+build
