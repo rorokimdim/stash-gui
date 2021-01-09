@@ -4,6 +4,8 @@
 
 <img src="screenshots/fruits.png" width=350></img>
 
+This is a work in progress. Any contribution is welcome.
+
 
 ## Credits
 

@@ -5,6 +5,7 @@
             ["electron-prompt" :as electron-prompt]
             ["bencode" :as bencode]))
 
+;; Some atoms to keep track of application state.
 (def main-window (atom nil))
 (def stash-process (atom nil))
 (def stash-busy? (atom false))
@@ -14,11 +15,13 @@
 (def context-menu-selected-item (atom nil))
 (def opened-with-file-path (atom nil))
 
+;; Context menu to show when we right click on the root node in gui
 (def menu-template-context-menu-root
   [{:label "Add"
     :click (fn [^js item ^js window]
              (.webContents.send window "add-child-to-selected-node"))}])
 
+;; Context menu to show when we right click on the selected node in gui
 (def menu-template-context-menu-selected-item
   [{:label "Add"
     :click (fn [^js item ^js window]
@@ -30,6 +33,7 @@
     :click (fn [^js item ^js window]
              (.webContents.send window "delete-selected-node"))}])
 
+;; Menus in application window
 (def menu-template-app
   [{:label (.-name app)
     :submenu [{:label "New"
@@ -54,13 +58,23 @@
     :submenu [{:role "minimize"}
               {:role "zoom"}]}])
 
-(defn mac-platform? []
-(= js/process.platform "darwin"))
+(defn mac-platform?
+  "Checks if we are running on a mac."
+  []
+  (= js/process.platform "darwin"))
 
-(defn bytes->string [data]
-  (.toString (js/Buffer.from data)))
+(defn process-stash-request-queue
+  "Processes upto one item from stash-request-queue.
 
-(defn process-stash-request-queue []
+  All requests to stash is enqueued into stash-request-queue. This function
+  is called every second to dequeue a request and send it to stash. Once
+  a response from stash arrives, we call the corresponding callback function
+  for the request with the data received from stash.
+
+  While we're waiting for a response from stash, the stash-busy? flag is set to true. The flag is
+  set to false once a response arrives. This function will only send request to stash if the flag is
+  set to false."
+  []
   (when (and (not @stash-busy?)
              (not-empty @stash-request-queue))
     (reset! stash-busy? true)
@@ -80,7 +94,17 @@
                                    (.once stdout "data" (fn [more-data]
                                                           (handler (clj->js (concat data more-data)))))))))))))
 
-(defn start-stash-process []
+(defn start-stash-process
+  "Starts the stash process.
+
+  The stash process needs to be started with BABASHKA_POD environment variable set to
+  true so that we can interact with it using babashka-pod protocol described in
+  https://github.com/babashka/pods#the-protocol
+
+  All requests for the stash process will be queued into stash-request-queue. The queue
+  will be processed using process-stash-request-queue function which is setup to run
+  every second using js/setInterval."
+  []
   (let [env (js->clj (js/Object.assign #js {} js/process.env))
         ^js sp (child-process/spawn
                 (str js/__dirname "/bin/stash")
@@ -90,19 +114,30 @@
     (js/setInterval process-stash-request-queue 1)))
 
 (defn call-stash-process
+  "Enqueues a stash request in stash-request-queue.
+
+  A request can be just a message to send to stash. If a callback funciton is provided,
+  it will be called with the data we receive from stash. See process-stash-request-queue
+  for more details."
   ([message] (call-stash-process message (constantly nil)))
   ([message cb]
    (swap! stash-request-queue conj [message cb])))
 
-(defn shutdown-stash-process []
+(defn shutdown-stash-process
+  "Issues 'shutdown' request to stash process."
+  []
   (call-stash-process {:op "shutdown"} (fn [_] (js/console.log "Goodbye!"))))
 
-(defn icon-path []
+(defn icon-path
+  "Returns full path to the app icon file."
+  []
   (if (mac-platform?)
     (str js/__dirname "/public/img/icon.icns")
     (str js/__dirname "/public/img/icon.png")))
 
-(defn init-browser []
+(defn init-browser
+  "Sets up the GUI. Called when electron says our app is ready to run its code."
+  []
   (reset! main-window (BrowserWindow.
                        (clj->js {:width 400
                                  :height 300
@@ -124,10 +159,42 @@
                                (.webContents.send w "open-stash-file-from-path" path false))))
     (.on w "closed" #(reset! main-window nil))))
 
-(defn quit-app []
+(defn quit-app
+  "Quits app as gracefully as we can."
+  []
   (shutdown-stash-process)
   (.quit app))
 
+(defn main
+  "The entry-point function which is called when our app starts."
+  []
+  (.setName app "Stash")
+
+  ;; For opening stash files from command-line argument
+  (when (= (alength js/process.argv) 3)
+    (let [path (aget js/process.argv 2)]
+      (reset! opened-with-file-path path)))
+
+  ;; For opening stash file using open-with on mac
+  (.on app "open-file" (fn [e path] (reset! opened-with-file-path path)))
+
+  (start-stash-process)
+
+  (reset! context-menu-root
+          (.buildFromTemplate Menu (clj->js menu-template-context-menu-root)))
+  (reset! context-menu-selected-item
+          (.buildFromTemplate Menu (clj->js menu-template-context-menu-selected-item)))
+
+  (.setApplicationMenu Menu (.buildFromTemplate Menu (clj->js menu-template-app)))
+  (.on app "window-all-closed" (fn [] (when-not (mac-platform?) (quit-app))))
+  (.on app "activate" (fn [] (.show ^js @main-window)))
+  (.on app "before-quit" (fn [] (reset! force-quit true)))
+  (.on app "ready" init-browser))
+
+;;
+;; The following hooks provide a way for the renderer-process to talk to the main process,
+;; to do things that it is not allowed to do directly (creating dialogs, reading files etc.).
+;;
 (.on ipcMain "call-stash"
      (fn [^js e message]
        (let [msg (js->clj message :keywordize-keys true)
@@ -194,27 +261,3 @@
      (fn [_]
        (let [^js m @context-menu-root]
          (.popup m))))
-
-(defn main []
-  (.setName app "Stash")
-
-  ;; For opening stash files from command-line argument
-  (when (= (alength js/process.argv) 3)
-    (let [path (aget js/process.argv 2)]
-      (reset! opened-with-file-path path)))
-
-  ;; For opening stash file using open-with on mac
-  (.on app "open-file" (fn [e path] (reset! opened-with-file-path path)))
-
-  (start-stash-process)
-
-  (reset! context-menu-root
-          (.buildFromTemplate Menu (clj->js menu-template-context-menu-root)))
-  (reset! context-menu-selected-item
-          (.buildFromTemplate Menu (clj->js menu-template-context-menu-selected-item)))
-
-  (.setApplicationMenu Menu (.buildFromTemplate Menu (clj->js menu-template-app)))
-  (.on app "window-all-closed" (fn [] (when-not (mac-platform?) (quit-app))))
-  (.on app "activate" (fn [] (.show ^js @main-window)))
-  (.on app "before-quit" (fn [] (reset! force-quit true)))
-  (.on app "ready" init-browser))

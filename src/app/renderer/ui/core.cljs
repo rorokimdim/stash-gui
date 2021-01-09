@@ -8,21 +8,16 @@
 
 (def ROOT-ID "app-container")
 
-(.on ipcRenderer "add-child-to-selected-node" (fn [_] (rf/dispatch [:add-child-to-selected-node])))
-(.on ipcRenderer "delete-selected-node" (fn [_] (rf/dispatch [:delete-selected-node])))
-(.on ipcRenderer "rename-selected-node" (fn [_] (rf/dispatch [:rename-selected-node])))
-(.on ipcRenderer "open-new-stash-file" (fn [_] (rf/dispatch [:open-new-stash-file])))
-(.on ipcRenderer "open-stash-file" (fn [_] (rf/dispatch [:open-stash-file])))
-(.on ipcRenderer "open-stash-file-from-path"
-     (fn [e path create-stash-if-missing?]
-       (rf/dispatch [:open-stash-file-from-path path create-stash-if-missing?])))
-
-(defn open-ancestor-nodes [element]
+(defn open-ancestor-nodes
+  "Opens all ancestor nodes to given element."
+  [element]
   (doseq [a (->> (dommy/ancestors element)
                  (filter #(= (dommy/class %) "collapsible-node")))]
     (dommy/set-attr! a :open "open")))
 
-(defn select-node [element]
+(defn select-node
+  "Selects a node, opens it and open any of its ancestor nodes."
+  [element]
   (when element
     (open-ancestor-nodes element)
     (.scrollIntoView element)
@@ -31,6 +26,7 @@
     (.focus (dommy/sel1 ".search-input"))))
 
 (defn search-node
+  "Searches for the next node containing a search-text."
   ([search-text selected-node-id] (search-node search-text selected-node-id false))
   ([search-text selected-node-id reverse?]
    (let [cmp (if reverse? > <)
@@ -75,6 +71,7 @@
           ^{:key nid} [tree-component nid (name k) grand-children]))]]))
 
 (defn no-open-file-component
+  "Component to show when a stash file hasn't been opened."
   []
   [:div {:class "no-open-file"}
    [:img {:src "img/logo.png"}]
@@ -117,3 +114,15 @@
                              (let [search-text (-> e .-target .-value)
                                    found-node (search-node search-text selected-node-id)]
                                (select-node found-node))))}]]]])))
+
+;;
+;; These provide a way for the main process to call the renderer process to do some gui related stuff.
+;;
+(.on ipcRenderer "add-child-to-selected-node" (fn [_] (rf/dispatch [:add-child-to-selected-node])))
+(.on ipcRenderer "delete-selected-node" (fn [_] (rf/dispatch [:delete-selected-node])))
+(.on ipcRenderer "rename-selected-node" (fn [_] (rf/dispatch [:rename-selected-node])))
+(.on ipcRenderer "open-new-stash-file" (fn [_] (rf/dispatch [:open-new-stash-file])))
+(.on ipcRenderer "open-stash-file" (fn [_] (rf/dispatch [:open-stash-file])))
+(.on ipcRenderer "open-stash-file-from-path"
+     (fn [e path create-stash-if-missing?]
+       (rf/dispatch [:open-stash-file-from-path path create-stash-if-missing?])))
