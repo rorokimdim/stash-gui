@@ -6,6 +6,35 @@
 
 This is a work in progress. Any contribution is welcome.
 
+## Development
+
+### Build and start dev environemnt
+
+```bash
+npm run dev
+```
+
+or `./watch`
+
+### Start app
+
+```bash
+npx electron .
+```
+
+or `./start`
+
+### Build a mac-app
+
+```bash
+./build-mac-app
+```
+
+### Build a linux-app
+
+```bash
+./build-linux-app
+```
 
 ## Credits
 

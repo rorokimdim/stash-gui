@@ -2,8 +2,10 @@
 
 set -e
 
+rm -rf ./Stash-linux-x64
+
 # Not sure why I need to do this
-rm -rf .shadow-cljs
+rm -rf ./.shadow-cljs
 
 rm -rf build
 mkdir -p build
@@ -15,4 +17,4 @@ cp README.md build/
 cp bin/linux/stash build/resources/bin/
 cp package.json build/
 npm run build-release
-npx electron-packager ./build Stash --platform=linux --arch=x64 --icon=./resources/public/img/icon.png --overwrite
+npx electron-packager ./build Stash --platform=linux --arch=x64 --icon=./resources/public/img/icon.png
