@@ -6,7 +6,15 @@
 
 This is a work in progress. Any contribution is welcome.
 
+## Installation
+
+Linux and mac binaries are available at [releases](https://github.com/rorokimdim/stash-gui/releases).
+
 ## Development
+
+The code is written in [clojurescript](https://clojurescript.org/) and uses [electron-js](https://www.electronjs.org/).
+There are several tutorials on electron-js on youtube (for just javascript unfortunately);
+try https://youtu.be/tqBi_Tou6wQ
 
 ### Install npm packages
 

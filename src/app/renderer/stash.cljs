@@ -1,6 +1,5 @@
 (ns app.renderer.stash
   (:require [re-frame.core :as rf]
-            ["bencode" :as bencode]
             ["electron" :refer [ipcRenderer]]
             ))
 
