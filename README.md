@@ -8,6 +8,12 @@ This is a work in progress. Any contribution is welcome.
 
 ## Development
 
+### Install npm packages
+
+```bash
+npm install
+```
+
 ### Build and start dev environemnt
 
 ```bash
