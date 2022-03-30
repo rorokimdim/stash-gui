@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "cssnano": "^4.1.10",
-    "electron": "^11.0.3",
+    "electron": "^13.6.6",
     "onchange": "^7.1.0",
     "postcss-cli": "^8.3.0",
     "shadow-cljs": "2.11.8",
